@@ -32,9 +32,9 @@ try {
     <tbody>
         <?php foreach ($equipment as $item): ?>
             <tr>
-                <td><?php echo htmlspecialchars($item['name']); ?></td>
-                <td><?php echo htmlspecialchars($item['price']); ?></td>
-                <td><a href="view_equipment.php?id=<?php echo $item['equipment_id']; ?>">View Details</a></td>
+                <td><?= htmlspecialchars($item['name']) ?></td>
+                <td><?= htmlspecialchars($item['price']) ?></td>
+                <td><a href="view_equipment.php?id=<?= $item['equipment_id'] ?>">View Details</a></td>
             </tr>
         <?php endforeach; ?>
     </tbody>

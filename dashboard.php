@@ -5,11 +5,11 @@ include("includes/header.php");
 include("includes/connect.php");
 
 // Check if the user is logged in
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id'])) :
     // Redirect to login page if not logged in
     header("Location: login.php");
     exit();
-}
+endif;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -32,13 +32,11 @@ if (!isset($_SESSION['user_id'])) {
         </nav>
     </header>
     <main>
-        <p>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</p>
+        <p>Welcome, <?= htmlspecialchars($_SESSION['username']) ?>!</p>
     </main>
     <footer>
-        <p>&copy; <?php echo date("Y"); ?> CMS. All rights reserved.</p>
+        <p>&copy; <?= date("Y") ?> CMS. All rights reserved.</p>
     </footer>
 </body>
 </html>
-
-<?php
-include("includes/footer.php");
+<?php include("includes/footer.php"); ?>
