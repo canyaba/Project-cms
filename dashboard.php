@@ -27,7 +27,9 @@ endif;
             <ul>
                 <li><a href="equipment.php">Manage Equipment</a></li>
                 <li><a href="insert_equipment.php">New Equipment</a></li>
-                <li><a href="edit_del_equipment.php">Update Equipment</a></li>
+                <li><a href="edit_equipment.php">Update Equipment</a></li>
+                <li><a href="pages.php">Manage Pages</a></li>
+                <li><a href="categories.php">Manage Categories</a></li>
             </ul>
         </nav>
     </header>

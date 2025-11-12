@@ -2,20 +2,19 @@
 session_start();
 
 include("includes/header.php");
-// Use a public/read-only DB connection for the landing page
-include __DIR__ . '/includes/db_public.php';
+include('includes/connect.php');
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Public landing page - allow browsing without login
+// Check if the user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
 
-// Fetch categories for navigation
-$catStmt = $db_public->query("SELECT * FROM categories ORDER BY name");
-$categories = $catStmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Handle sorting with optional category filter
+// Handle sorting with order direction
 $sort_by = isset($_GET['sort']) ? $_GET['sort'] : 'name';
 $order = isset($_GET['order']) ? strtoupper($_GET['order']) : 'ASC';
 $allowed_sorts = ['name', 'price', 'created_at', 'updated_at'];
@@ -26,21 +25,27 @@ if ($order !== 'ASC' && $order !== 'DESC') {
     $order = 'ASC';
 }
 
-$filterCategory = isset($_GET['category']) ? (int)$_GET['category'] : 0;
-
-// Build equipment query with optional WHERE on category
+// Fetch all equipment with categories (if any)
 $query = "SELECT e.*, c.name AS category_name
           FROM equipment e
-          LEFT JOIN categories c ON e.category_id = c.id";
-if ($filterCategory) {
-    $query .= " WHERE e.category_id = :cat";
-}
-$query .= " ORDER BY e." . $sort_by . " " . $order;
-
-$stmt = $db_public->prepare($query);
-if ($filterCategory) $stmt->bindValue(':cat', $filterCategory, PDO::PARAM_INT);
+          LEFT JOIN categories c ON e.category_id = c.id
+          ORDER BY e." . $sort_by . " " . $order;
+$stmt = $db->prepare($query);
 $stmt->execute();
 $equipment = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// (Optional) Handle comment submission — preserve existing behavior if used elsewhere
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['equipment_id'])) {
+    $equipment_id = $_POST['equipment_id'];
+    $comment_text = filter_input(INPUT_POST, 'comment_text', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+    if (!empty($comment_text)) {
+        $stmt = $db->prepare("INSERT INTO comments (equipment_id, comment_text) VALUES (:equipment_id, :comment_text)");
+        $stmt->execute([':equipment_id' => $equipment_id, ':comment_text' => $comment_text]);
+        header("Location: equipment.php");
+        exit();
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -48,32 +53,12 @@ $equipment = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Equipment List</title>
-    <link rel="stylesheet" href="css/mdb.min.css">
 </head>
 <body>
-    <div class="container mt-4">
-        <div class="row">
-            <aside class="col-md-3">
-                <h5>Categories</h5>
-                <ul class="list-group mb-3">
-                    <li class="list-group-item <?= $filterCategory ? '' : 'active' ?>">
-                        <a href="index.php">All</a>
-                    </li>
-                    <?php foreach ($categories as $cat): ?>
-                        <li class="list-group-item <?= ($filterCategory === (int)$cat['id']) ? 'active' : '' ?>">
-                            <a href="index.php?category=<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></a>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-                <?php if (isset($_SESSION['user_id'])): ?>
-                    <a class="btn btn-primary mb-3" href="insert_equipment.php">Add New Equipment</a>
-                <?php endif; ?>
-            </aside>
-
-            <main class="col-md-9">
-                <h1>Equipment</h1>
-                <div class="table-responsive">
-                <table class="table">
+    <h1>Equipment List</h1>
+    <a class="btn btn-primary mb-3" href="insert_equipment.php">Add New Equipment</a>
+    <div class="table-responsive">
+    <table class="table">
         <thead>
             <tr>
                 <th>
@@ -82,14 +67,14 @@ $equipment = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <th>
                     <a href="?sort=price&order=<?= $order === 'ASC' ? 'DESC' : 'ASC' ?>">Price <?= $sort_by === 'price' ? ($order === 'ASC' ? '↑' : '↓') : '' ?></a>
                 </th>
-                    <th>Category</th>
+                <th>Categories</th>
                 <th>
                     <a href="?sort=created_at&order=<?= $order === 'ASC' ? 'DESC' : 'ASC' ?>">Created <?= $sort_by === 'created_at' ? ($order === 'ASC' ? '↑' : '↓') : '' ?></a>
                 </th>
                 <th>
                     <a href="?sort=updated_at&order=<?= $order === 'ASC' ? 'DESC' : 'ASC' ?>">Updated <?= $sort_by === 'updated_at' ? ($order === 'ASC' ? '↑' : '↓') : '' ?></a>
                 </th>
-                    <th>Actions</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -97,22 +82,17 @@ $equipment = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <tr>
                     <td><?= htmlspecialchars($item['name']) ?></td>
                     <td><?= htmlspecialchars($item['price']) ?></td>
-                    <td><?= htmlspecialchars($item['category_name'] ?? '') ?></td>
+                    <td><?= htmlspecialchars($item['categories'] ?? '') ?></td>
                     <td><?= htmlspecialchars($item['created_at']) ?></td>
                     <td><?= htmlspecialchars($item['updated_at'] ?? '') ?></td>
                     <td>
-                        <?php if (isset($_SESSION['user_id'])): ?>
-                            <a class="btn btn-sm btn-primary" href="edit_equipment.php?id=<?= $item['equipment_id'] ?>">Edit</a>
-                        <?php endif; ?>
+                        <a class="btn btn-sm btn-primary" href="edit_equipment.php?id=<?= $item['equipment_id'] ?>">Edit</a>
                         <a class="btn btn-sm btn-info" href="view_equipment.php?id=<?= $item['equipment_id'] ?>">View</a>
                     </td>
                 </tr>
             <?php endforeach; ?>
         </tbody>
     </table>
-                </div>
-            </main>
-        </div>
     </div>
 </body>
 </html>
