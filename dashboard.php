@@ -2,7 +2,7 @@
 session_start();
 
 include("includes/header.php");
-include("includes/connect.php");
+require_once __DIR__ . '/includes/connect.php';
 
 // Check if the user is logged in
 if (!isset($_SESSION['user_id'])) :
@@ -28,7 +28,6 @@ endif;
                 <li><a href="equipment.php">Manage Equipment</a></li>
                 <li><a href="insert_equipment.php">New Equipment</a></li>
                 <li><a href="edit_equipment.php">Update Equipment</a></li>
-                <li><a href="pages.php">Manage Pages</a></li>
                 <li><a href="categories.php">Manage Categories</a></li>
             </ul>
         </nav>

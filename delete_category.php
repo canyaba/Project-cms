@@ -1,6 +1,6 @@
 <?php
 session_start();
-include("includes/connect.php");
+require_once __DIR__ . '/includes/connect.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) :
@@ -18,15 +18,15 @@ try {
     $db->beginTransaction();
     
     // Delete category associations first
-    $stmt = $db->prepare("DELETE FROM page_categories WHERE category_id = ?");
+    $stmt = $db->prepare("UPDATE pages SET category_id = NULL WHERE category_id = ?");
     $stmt->execute([$category_id]);
-    
+
     // Delete the category
-    $stmt = $db->prepare("DELETE FROM categories WHERE id = ?");
+    $stmt = $db->prepare("DELETE FROM categories WHERE category_id = ?");
     $stmt->execute([$category_id]);
     
     $db->commit();
-    header("Location: categories.php?success=2");
+        header("Location: categories.php?success=delete");
 } catch (Exception $e) {
     $db->rollBack();
     header("Location: categories.php?error=" . urlencode($e->getMessage()));

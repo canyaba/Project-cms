@@ -1,3 +1,4 @@
+<?php $isLoggedIn = isset($_SESSION['user_id']); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,7 +20,7 @@
 <body>
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
   <div class="container-fluid">
-    <a class="navbar-brand" href="index.php">FitGear Eqiupment</a>
+    <a class="navbar-brand" href="index.php">FitGear Equipment</a>
     <button
       data-mdb-collapse-init
       class="navbar-toggler"
@@ -34,22 +35,42 @@
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Home</a>
+          <a class="nav-link" aria-current="page" href="index.php">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">Equipement</a>
+          <a class="nav-link" href="index.php#equipment">Browse Equipment</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Comments</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link disabled"
-            >Contact Us</a
-          >
-        </li>
+        <?php if ($isLoggedIn): ?>
+          <li class="nav-item">
+            <a class="nav-link" href="equipment.php">Manage Equipment</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="categories.php">Categories</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="comments_moderation.php">Moderate Comments</a>
+          </li>
+        <?php endif; ?>
+      </ul>
+      <ul class="navbar-nav ms-auto">
+        <?php if ($isLoggedIn): ?>
+          <li class="nav-item">
+            <span class="nav-link">Welcome back!</span>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="logout.php">Logout</a>
+          </li>
+        <?php else: ?>
+          <li class="nav-item">
+            <a class="nav-link" href="login.php">Login</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="register.php">Register</a>
+          </li>
+        <?php endif; ?>
       </ul>
     </div>
   </div>
 </nav>
- 
-    
+
+

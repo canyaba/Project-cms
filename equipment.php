@@ -2,7 +2,7 @@
 session_start();
 
 include("includes/header.php");
-include('includes/connect.php');
+require_once __DIR__ . '/includes/connect.php';
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -17,19 +17,19 @@ if (!isset($_SESSION['user_id'])) {
 // Handle sorting with order direction
 $sort_by = isset($_GET['sort']) ? $_GET['sort'] : 'name';
 $order = isset($_GET['order']) ? strtoupper($_GET['order']) : 'ASC';
-$allowed_sorts = ['name', 'price', 'created_at', 'updated_at'];
-if (!in_array($sort_by, $allowed_sorts)) {
-    $sort_by = 'name';
-}
-if ($order !== 'ASC' && $order !== 'DESC') {
-    $order = 'ASC';
-}
+ $allowed_sorts = ['name', 'price', 'created_at', 'updated_at'];
+ if (!in_array($sort_by, $allowed_sorts)) {
+     $sort_by = 'name';
+ }
+ if ($order !== 'ASC' && $order !== 'DESC') {
+     $order = 'ASC';
+ }
 
 // Fetch all equipment with categories (if any)
-$query = "SELECT e.*, c.name AS category_name
-          FROM equipment e
-          LEFT JOIN categories c ON e.category_id = c.id
-          ORDER BY e." . $sort_by . " " . $order;
+ $query = "SELECT e.*, c.name AS category_name
+           FROM equipment e
+           LEFT JOIN categories c ON e.category_id = c.category_id
+           ORDER BY e." . $sort_by . " " . $order;
 $stmt = $db->prepare($query);
 $stmt->execute();
 $equipment = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -57,6 +57,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['equipment_id'])) {
 <body>
     <h1>Equipment List</h1>
     <a class="btn btn-primary mb-3" href="insert_equipment.php">Add New Equipment</a>
+    <?php if (isset($_GET['created'])): ?>
+        <div class="alert alert-success">Equipment created successfully.</div>
+    <?php elseif (isset($_GET['updated'])): ?>
+        <div class="alert alert-success">Equipment updated successfully.</div>
+    <?php elseif (isset($_GET['deleted'])): ?>
+        <div class="alert alert-info">Equipment deleted.</div>
+    <?php endif; ?>
     <div class="table-responsive">
     <table class="table">
         <thead>
@@ -67,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['equipment_id'])) {
                 <th>
                     <a href="?sort=price&order=<?= $order === 'ASC' ? 'DESC' : 'ASC' ?>">Price <?= $sort_by === 'price' ? ($order === 'ASC' ? '↑' : '↓') : '' ?></a>
                 </th>
-                <th>Categories</th>
+                <th>Category</th>
                 <th>
                     <a href="?sort=created_at&order=<?= $order === 'ASC' ? 'DESC' : 'ASC' ?>">Created <?= $sort_by === 'created_at' ? ($order === 'ASC' ? '↑' : '↓') : '' ?></a>
                 </th>
@@ -81,12 +88,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['equipment_id'])) {
             <?php foreach ($equipment as $item): ?>
                 <tr>
                     <td><?= htmlspecialchars($item['name']) ?></td>
-                    <td><?= htmlspecialchars($item['price']) ?></td>
-                    <td><?= htmlspecialchars($item['categories'] ?? '') ?></td>
+                    <td>$<?= htmlspecialchars(number_format((float)$item['price'], 2)) ?></td>
+                    <td><?= htmlspecialchars($item['category_name'] ?? 'Uncategorized') ?></td>
                     <td><?= htmlspecialchars($item['created_at']) ?></td>
-                    <td><?= htmlspecialchars($item['updated_at'] ?? '') ?></td>
+                    <td><?= htmlspecialchars($item['updated_at']) ?></td>
                     <td>
                         <a class="btn btn-sm btn-primary" href="edit_equipment.php?id=<?= $item['equipment_id'] ?>">Edit</a>
+                        <a class="btn btn-sm btn-danger" href="delete_equipment.php?id=<?= $item['equipment_id'] ?>" onclick="return confirm('Delete this equipment?')">Delete</a>
                         <a class="btn btn-sm btn-info" href="view_equipment.php?id=<?= $item['equipment_id'] ?>">View</a>
                     </td>
                 </tr>

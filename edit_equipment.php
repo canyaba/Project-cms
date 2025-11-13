@@ -2,7 +2,7 @@
 session_start();
 
 include("includes/header.php");
-include('includes/connect.php');
+require_once __DIR__ . '/includes/connect.php';
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -28,17 +28,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'):
         // Delete the equipment (category_id will be set to NULL on categories if FK present)
         $stmt = $db->prepare("DELETE FROM equipment WHERE equipment_id = :id");
         $stmt->execute([':id' => $id]);
-        header("Location: equipment.php"); // Redirect to the equipment list page
+        header("Location: equipment.php?deleted=1"); // Redirect to the equipment list page
         exit();
     else:
         // Update the equipment
-        $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-        $description = $_POST['description']; // WYSIWYG content is not sanitized here
+        $name = trim($_POST['name'] ?? '');
+        $description = trim($_POST['description'] ?? '');
         $price = filter_input(INPUT_POST, 'price', FILTER_VALIDATE_FLOAT);
         $category_id = isset($_POST['category']) && $_POST['category'] !== '' ? (int)$_POST['category'] : null;
 
         // Validate input
-        if (empty($name) || empty($description) || $price === false || $price <= 0): 
+        if ($name === '' || trim(strip_tags($description)) === '' || $price === false || $price <= 0): 
             $error = "Please fill in all fields correctly.";
         else:
             try {
@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'):
                 ]);
 
                 $db->commit();
-                header("Location: equipment.php"); // Redirect to the equipment list page
+                header("Location: equipment.php?updated=1"); // Redirect to the equipment list page
                 exit();
             } catch (Exception $e) {
                 if ($db->inTransaction()) $db->rollBack();
@@ -78,48 +78,54 @@ $stmt = $db->query("SELECT * FROM categories ORDER BY name");
 $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $equipment_category_id = $equipment['category_id'] ?? null;
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Edit Equipment</title>
-    <script src="https://cdn.tiny.cloud/1/fgwis09pz9s06ju92wbfo59j7upfo7xmcwjkvx2eoajw5v8e/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
-    <script>
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
         tinymce.init({
-            selector: '#description'
+            selector: '#description',
+            menubar: false,
+            plugins: 'link lists code',
+            toolbar: 'undo redo | bold italic underline | bullist numlist | link | code',
+            height: 300
         });
-    </script>
-</head>
-<body>
+    });
+</script>
+
+<div class="container mt-4">
     <h1>Edit Equipment</h1>
     <?php if (isset($error)): ?>
-        <p style="color: red;"><?= htmlspecialchars($error) ?></p>
-    <?php endif; ?>
-    <form method="POST">
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name" value="<?= htmlspecialchars($equipment['name']) ?>" required>
-        <br>
-        <label for="description">Description:</label>
-        <textarea id="description" name="description" required><?= htmlspecialchars($equipment['description']) ?></textarea>
-        <br>
-        <label for="price">Price:</label>
-        <input type="number" id="price" name="price" step="0.01" value="<?= htmlspecialchars($equipment['price']) ?>" required>
-        <br>
-        <div>
-            <label for="category">Category</label>
-            <select name="category" id="category" class="form-control">
-                <option value="">-- Select category --</option>
-                <?php foreach ($categories as $category): ?>
-                    <option value="<?= $category['id'] ?>" <?= ($equipment_category_id == $category['id']) ? 'selected' : '' ?>><?= htmlspecialchars($category['name']) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <br>
-        <button type="submit">Update Equipment</button>
-        <button type="submit" name="delete" value="1">Delete Equipment</button>
-    </form>
-</body>
-</html>
+            <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+        <?php endif; ?>
+        <form method="POST" class="card p-3">
+            <div class="mb-3">
+                <label for="name" class="form-label">Name</label>
+                <input type="text" id="name" name="name" value="<?= htmlspecialchars($equipment['name']) ?>" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea id="description" name="description" class="form-control" required><?= $equipment['description'] ?></textarea>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="price" class="form-label">Price</label>
+                    <input type="number" id="price" name="price" step="0.01" value="<?= htmlspecialchars($equipment['price']) ?>" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="category" class="form-label">Category</label>
+                    <select name="category" id="category" class="form-select">
+                        <option value="">-- Select category --</option>
+                        <?php foreach ($categories as $category): ?>
+                            <option value="<?= $category['category_id'] ?>" <?= ($equipment_category_id == $category['category_id']) ? 'selected' : '' ?>><?= htmlspecialchars($category['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Update Equipment</button>
+                <button type="submit" name="delete" value="1" class="btn btn-danger" onclick="return confirm('Delete this equipment?')">Delete Equipment</button>
+                <a href="equipment.php" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
 
-<?php
-include("includes/footer.php");
+    <?php include("includes/footer.php");

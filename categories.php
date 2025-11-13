@@ -1,7 +1,7 @@
 <?php
 session_start();
 include("includes/header.php");
-include("includes/connect.php");
+require_once __DIR__ . '/includes/connect.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) :
@@ -9,23 +9,29 @@ if (!isset($_SESSION['user_id'])) :
     exit();
 endif;
 
-// Handle category creation
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) :
-    if ($_POST['action'] === 'create') :
-        $name = trim($_POST['name']);
-        $description = trim($_POST['description']);
-        
-        if (!empty($name)) :
-            $stmt = $db->prepare("INSERT INTO categories (name, description) VALUES (?, ?)");
-            $stmt->execute([$name, $description]);
-            header("Location: categories.php?success=1");
+// Handle category create/update actions
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $name = trim($_POST['name'] ?? '');
+    if ($_POST['action'] === 'create' && $name !== '') {
+        $stmt = $db->prepare("INSERT INTO categories (name) VALUES (?)");
+        $stmt->execute([$name]);
+        header("Location: categories.php?success=create");
+        exit();
+    }
+
+    if ($_POST['action'] === 'update') {
+        $categoryId = (int)($_POST['category_id'] ?? 0);
+        if ($categoryId > 0 && $name !== '') {
+            $stmt = $db->prepare("UPDATE categories SET name = ? WHERE category_id = ?");
+            $stmt->execute([$name, $categoryId]);
+            header("Location: categories.php?success=update");
             exit();
-        endif;
-    endif;
-endif;
+        }
+    }
+}
 
 // Fetch all categories
-$stmt = $db->query("SELECT * FROM categories ORDER BY name");
+$stmt = $db->query("SELECT category_id, name FROM categories ORDER BY name");
 $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -43,7 +49,7 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         <?php if (isset($_GET['success'])) : ?>
             <div class="alert alert-success">
-                Category has been created successfully!
+                <?php if ($_GET['success'] === 'create') : ?>Category created successfully!<?php elseif ($_GET['success'] === 'update') : ?>Category updated successfully!<?php elseif ($_GET['success'] === 'delete') : ?>Category deleted successfully!<?php endif; ?>
             </div>
         <?php endif; ?>
         
@@ -57,10 +63,6 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="form-outline mb-3">
                                 <input type="text" id="name" name="name" class="form-control" required>
                                 <label class="form-label" for="name">Category Name</label>
-                            </div>
-                            <div class="form-outline mb-3">
-                                <textarea id="description" name="description" class="form-control" rows="3"></textarea>
-                                <label class="form-label" for="description">Description</label>
                             </div>
                             <button type="submit" class="btn btn-primary">Create Category</button>
                         </form>
@@ -77,8 +79,7 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <thead>
                                     <tr>
                                         <th>Name</th>
-                                        <th>Description</th>
-                                        <th>Created</th>
+                                        <th class="w-50">Rename</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -86,14 +87,18 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <?php foreach ($categories as $category) : ?>
                                         <tr>
                                             <td><?= htmlspecialchars($category['name']) ?></td>
-                                            <td><?= htmlspecialchars($category['description']) ?></td>
-                                            <td><?= date('Y-m-d', strtotime($category['created_at'])) ?></td>
                                             <td>
-                                                <a href="edit_category.php?id=<?= $category['id'] ?>" 
-                                                   class="btn btn-sm btn-primary">Edit</a>
-                                                <a href="delete_category.php?id=<?= $category['id'] ?>" 
+                                                <form method="POST" class="d-flex gap-2 align-items-center">
+                                                    <input type="hidden" name="action" value="update">
+                                                    <input type="hidden" name="category_id" value="<?= $category['category_id'] ?>">
+                                                    <input type="text" name="name" class="form-control" value="<?= htmlspecialchars($category['name']) ?>" required>
+                                                    <button type="submit" class="btn btn-sm btn-secondary">Save</button>
+                                                </form>
+                                            </td>
+                                            <td>
+                                                <a href="delete_category.php?id=<?= $category['category_id'] ?>" 
                                                    class="btn btn-sm btn-danger"
-                                                   onclick="return confirm('Are you sure? This will remove the category from all pages.')">Delete</a>
+                                                   onclick="return confirm('Delete this category? Pages assigned to it will lose the association.')">Delete</a>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

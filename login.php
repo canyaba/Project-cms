@@ -1,6 +1,6 @@
 <?php
 
-include("includes/connect.php");
+require_once __DIR__ . '/includes/connect.php';
 
 session_start();
 
