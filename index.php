@@ -34,8 +34,8 @@ if ($filterCategory) {
     $params[':category_id'] = $filterCategory;
 }
 if ($searchTerm !== '') {
-    $conditions[] = '(e.name LIKE :term OR e.description LIKE :term)';
-    $params[':term'] = '%' . $searchTerm . '%';
+    $conditions[] = 'e.name LIKE :name_prefix';
+    $params[':name_prefix'] = $searchTerm . '%';
 }
 
 $whereSql = $conditions ? ' WHERE ' . implode(' AND ', $conditions) : '';
@@ -111,30 +111,11 @@ function buildQueryString(array $overrides = []): string
     return $params ? '?' . http_build_query($params) : '';
 }
 ?>
-
-<div class="container mt-4">
-    <div class="row">
-        <aside class="col-lg-3 mb-4">
-            <h5 class="mb-3">Categories</h5>
-            <ul class="list-group mb-4">
-                <li class="list-group-item <?= $filterCategory ? '' : 'active' ?>">
-                    <a class="text-decoration-none" href="<?= htmlspecialchars(buildQueryString(['category' => null, 'page' => 1])) ?>">All</a>
-                </li>
-                <?php foreach ($categories as $cat): ?>
-                    <li class="list-group-item <?= ($filterCategory === (int)$cat['category_id']) ? 'active' : '' ?>">
-                        <a class="text-decoration-none" href="<?= htmlspecialchars(buildQueryString(['category' => $cat['category_id'], 'page' => 1])) ?>">
-                            <?= htmlspecialchars($cat['name']) ?>
-                        </a>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-        </aside>
-
     <main class="col-lg-9" id="equipment">
             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3 gap-3">
                 <h1 class="h3 m-0">Equipment</h1>
-                <form class="d-flex gap-2" method="get" action="">
-                    <input type="text" name="q" class="form-control" placeholder="Search equipment" value="<?= htmlspecialchars($searchTerm) ?>">
+                <form class="d-flex gap-2" method="get" action="" id="equipment-filter-form">
+                    <input type="text" name="q" class="form-control" placeholder="Search equipment" value="<?= htmlspecialchars($searchTerm) ?>" autocomplete="off">
                     <select name="category" class="form-select" style="min-width: 180px;">
                         <option value="">All categories</option>
                         <?php foreach ($categories as $cat): ?>
@@ -150,7 +131,6 @@ function buildQueryString(array $overrides = []): string
                         <option value="updated_at" <?= $sort_by === 'updated_at' ? 'selected' : '' ?>>Recently updated</option>
                     </select>
                     <input type="hidden" name="order" value="<?= $order ?>">
-                    <button type="submit" class="btn btn-primary">Search</button>
                 </form>
             </div>
 
@@ -212,4 +192,35 @@ function buildQueryString(array $overrides = []): string
 </div>
 
 <script src="js/mdb.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const filterForm = document.getElementById('equipment-filter-form');
+    if (!filterForm) {
+        return;
+    }
+
+    const searchInput = filterForm.querySelector('input[name="q"]');
+    const selects = filterForm.querySelectorAll('select');
+    let debounceTimer = null;
+
+    const submitForm = () => {
+        if (typeof filterForm.requestSubmit === 'function') {
+            filterForm.requestSubmit();
+        } else {
+            filterForm.submit();
+        }
+    };
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(submitForm, 300);
+        });
+    }
+
+    selects.forEach(function (select) {
+        select.addEventListener('change', submitForm);
+    });
+});
+</script>
 <?php include 'includes/footer.php'; ?>
