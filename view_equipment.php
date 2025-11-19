@@ -24,8 +24,8 @@ if (!$equipment) {
     exit();
 }
 
-// Fetch comments for the equipment (current schema has: comment_id, equipment_id, comment_text, created_at)
-$stmt = $db_public->prepare("SELECT comment_id, comment_text, created_at FROM comments WHERE equipment_id = :equipment_id ORDER BY created_at DESC");
+// Fetch comments for the equipment (current schema has: comment_id, equipment_id, comment_text, user_name, created_at)
+$stmt = $db_public->prepare("SELECT comment_id, comment_text, user_name, created_at FROM comments WHERE equipment_id = :equipment_id ORDER BY created_at DESC");
 $stmt->execute([':equipment_id' => $equipment_id]);
 $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -39,7 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $comment_text = trim($_POST['comment_text'] ?? '');
         $comment_text = filter_var($comment_text, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-        if ($comment_text !== '') {
+        $commenter_name = trim($_POST['commenter_name'] ?? '');
+        $commenter_name = filter_var($commenter_name, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        if ($comment_text !== '' && $commenter_name !== '') {
             // Try to include the admin/write connection only when a write is required.
             $connectPath = __DIR__ . '/includes/connect.php';
             if (file_exists($connectPath)) {
@@ -48,17 +50,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Use the write-enabled connection when available. Fall back to public PDO.
             $writeDb = (isset($db) && $db instanceof PDO) ? $db : $db_public;
-            $stmt = $writeDb->prepare("INSERT INTO comments (equipment_id, comment_text) VALUES (:equipment_id, :comment_text)");
+            $stmt = $writeDb->prepare("INSERT INTO comments (equipment_id, comment_text, user_name) VALUES (:equipment_id, :comment_text, :user_name)");
             $stmt->execute([
                 ':equipment_id' => $equipment_id,
-                ':comment_text' => $comment_text
+                ':comment_text' => $comment_text,
+                ':user_name' => $commenter_name
             ]);
             // clear captcha so it can't be reused
             unset($_SESSION['captcha_code']);
             header("Location: view_equipment.php?id=$equipment_id");
             exit();
         } else {
-            $error = "Please enter a comment.";
+            $error = "Please provide both your name and a comment.";
         }
     }
 }
@@ -85,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <ul class="list-unstyled">
             <?php foreach ($comments as $comment): ?>
                 <li class="mb-3">
-                    <div><strong>Anonymous:</strong> <?= nl2br(htmlspecialchars($comment['comment_text'])) ?></div>
+                    <div><strong><?= htmlspecialchars($comment['user_name'] ?: 'Anonymous') ?>:</strong> <?= nl2br(htmlspecialchars($comment['comment_text'])) ?></div>
                     <small class="text-muted">Posted on <?= htmlspecialchars(date('Y-m-d H:i', strtotime($comment['created_at']))) ?></small>
                 </li>
             <?php endforeach; ?>
@@ -100,7 +103,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
     <form method="POST">
-        <!-- Name removed: comments table does not have author_name column -->
+        <div class="mb-3">
+            <label for="commenter_name" class="form-label">Your name</label>
+            <input type="text" name="commenter_name" id="commenter_name" class="form-control" maxlength="100" required>
+        </div>
         <div class="mb-3">
             <label for="comment_text" class="form-label">Your comment</label>
             <textarea name="comment_text" id="comment_text" class="form-control" rows="4" required></textarea>
