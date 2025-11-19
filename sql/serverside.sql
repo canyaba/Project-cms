@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 12, 2025 at 04:10 PM
+-- Generation Time: Nov 13, 2025 at 11:31 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -53,16 +53,23 @@ CREATE TABLE `comments` (
   `comment_id` int(11) NOT NULL,
   `equipment_id` int(11) NOT NULL,
   `comment_text` text NOT NULL,
-  `created_at` datetime DEFAULT current_timestamp()
+  `created_at` datetime DEFAULT current_timestamp(),
+  `user_name` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `comments`
 --
 
-INSERT INTO `comments` (`comment_id`, `equipment_id`, `comment_text`, `created_at`) VALUES
-(1, 11, 'rhrhrtgvrgverge', '2025-04-07 13:05:48'),
-(2, 11, 'hjkfkufdukgfkujfg', '2025-04-07 15:26:37');
+INSERT INTO `comments` (`comment_id`, `equipment_id`, `comment_text`, `created_at`, `user_name`) VALUES
+(3, 2, 'This rowing machine feels sturdy. Great quality.', '2025-11-13 04:29:44', 'Ryan T.'),
+(4, 4, 'Would be nice to see more equipment details.', '2025-11-13 04:29:44', 'Liam P.'),
+(5, 1, 'Appreciate how the equipment descriptions are detailed.', '2025-11-13 04:29:44', 'Emily K.'),
+(6, 7, 'Is there a section for cardio gear?', '2025-11-13 04:29:44', 'Chris A.'),
+(7, 6, 'Some pages take a while to load — maybe cache images?', '2025-11-13 04:29:44', 'Maya R.'),
+(8, 8, 'Nice layout! The CMS looks clean and easy to navigate.', '2025-11-13 04:29:44', 'Noah J.'),
+(9, 3, 'Hope to see a review section added soon.', '2025-11-13 04:29:44', 'Ava S.'),
+(10, 2, 'Love that admins can respond directly to comments!', '2025-11-13 04:29:44', 'Ethan C.');
 
 -- --------------------------------------------------------
 
@@ -74,28 +81,30 @@ CREATE TABLE `equipment` (
   `equipment_id` int(10) NOT NULL,
   `category_id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
-  `description` varchar(200) NOT NULL,
+  `description` text NOT NULL,
   `price` decimal(10,6) NOT NULL,
-  `comment_text` text NOT NULL
+  `comment_text` text NOT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `equipment`
 --
 
-INSERT INTO `equipment` (`equipment_id`, `category_id`, `name`, `description`, `price`, `comment_text`) VALUES
-(1, 1, 'Treadmill', 'Commercial-grade with 15% incline, 12mph max speed, heart rate monitor, and 10\" touchscreen', 1900.000000, ''),
-(2, 1, 'Rowing Machine', 'Magnetic resistance with 10 levels, LCD monitor, foldable design for storage', 500.000000, ''),
-(3, 1, 'Exercise Bikes', 'Upright stationary bike, 24 resistance levels, pulse sensors, backlit display', 380.000000, ''),
-(4, 4, 'Power Rack', 'Heavy-duty steel frame, multi-grip pull-up bar, safety spotters, weight storage pegs', 70.000000, ''),
-(5, 2, 'Leg Press Machine', '45-degree sled design, 1000lb capacity, oversized backrest and foot platform', 1299.000000, ''),
-(6, 3, 'Olympic Barbell', '7ft Olympic bar, 1500lb weight capacity, chrome finish with knurled grip', 250.000000, ''),
-(7, 3, 'Weight Plates set', 'Rubber-coated Olympic plates, 255lb total (2x45lb, 2x35lb, 2x25lb, 2x10lb, 4x5lb, 2x2.5lb)', 430.000000, ''),
-(8, 4, 'Flat Bench', 'Heavy-duty steel frame, 600lb weight capacity, high-density foam padding', 130.000000, ''),
-(9, 5, 'Plyo Box', '3-in-1 wooden box (20\", 24\", 30\" heights), non-slip surface, 400lb capacity', 150.000000, ''),
-(10, 5, 'Resistance Bands', 'Set of 5 bands with different resistance levels, door anchor, handles, ankle straps', 30.000000, ''),
-(11, 5, 'Battle Ropes', '1.5\" diameter, 40ft length, polyester blend with heat-shrink handles', 90.000000, ''),
-(12, 5, 'TRX Suspension Trainer', 'Professional-grade straps, multiple anchor options, workout guide included', 190.000000, '');
+INSERT INTO `equipment` (`equipment_id`, `category_id`, `name`, `description`, `price`, `comment_text`, `created_at`, `updated_at`) VALUES
+(1, 1, 'Treadmill', 'Commercial-grade with 15% incline, 12mph max speed, heart rate monitor, and 10\" touchscreen', 1900.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(2, 1, 'Rowing Machine', 'Magnetic resistance with 10 levels, LCD monitor, foldable design for storage', 500.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(3, 1, 'Exercise Bikes', 'Upright stationary bike, 24 resistance levels, pulse sensors, backlit display', 380.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(4, 4, 'Power Rack', 'Heavy-duty steel frame, multi-grip pull-up bar, safety spotters, weight storage pegs', 70.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(5, 2, 'Leg Press Machine', '45-degree sled design, 1000lb capacity, oversized backrest and foot platform', 1299.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(6, 3, 'Olympic Barbell', '7ft Olympic bar, 1500lb weight capacity, chrome finish with knurled grip', 250.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(7, 3, 'Weight Plates set', 'Rubber-coated Olympic plates, 255lb total (2x45lb, 2x35lb, 2x25lb, 2x10lb, 4x5lb, 2x2.5lb)', 430.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(8, 4, 'Flat Bench', 'Heavy-duty steel frame, 600lb weight capacity, high-density foam padding', 130.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(9, 5, 'Plyo Box', '3-in-1 wooden box (20\", 24\", 30\" heights), non-slip surface, 400lb capacity', 150.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(10, 5, 'Resistance Bands', 'Set of 5 bands with different resistance levels, door anchor, handles, ankle straps', 30.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(11, 5, 'Battle Ropes', '1.5\" diameter, 40ft length, polyester blend with heat-shrink handles', 90.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(12, 5, 'TRX Suspension Trainer', 'Professional-grade straps, multiple anchor options, workout guide included', 190.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02');
 
 -- --------------------------------------------------------
 
@@ -162,7 +171,7 @@ ALTER TABLE `categories`
 -- AUTO_INCREMENT for table `comments`
 --
 ALTER TABLE `comments`
-  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `equipment`

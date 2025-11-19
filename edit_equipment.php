@@ -8,6 +8,38 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+/**
+ * Guarantee the equipment description column can store rich text without truncation errors.
+ */
+function ensureEquipmentDescriptionCapacity(PDO $db): void
+{
+    static $checked = false;
+    if ($checked) {
+        return;
+    }
+    $checked = true;
+
+    $sql = "SELECT DATA_TYPE, CHARACTER_MAXIMUM_LENGTH
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'equipment'
+              AND COLUMN_NAME = 'description'";
+    $stmt = $db->query($sql);
+    $column = $stmt->fetch();
+    if (!$column) {
+        return;
+    }
+
+    $isLimitedVarchar = strtolower($column['DATA_TYPE'] ?? '') === 'varchar'
+        && (int)($column['CHARACTER_MAXIMUM_LENGTH'] ?? 0) < 1000;
+
+    if ($isLimitedVarchar) {
+        $db->exec("ALTER TABLE equipment MODIFY description TEXT NOT NULL");
+    }
+}
+
+ensureEquipmentDescriptionCapacity($db);
+
 // Check if the user is logged in
 if (!isset($_SESSION['user_id'])): 
     header("Location: login.php");
@@ -78,13 +110,15 @@ $stmt = $db->query("SELECT * FROM categories ORDER BY name");
 $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $equipment_category_id = $equipment['category_id'] ?? null;
 ?>
-<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<script src="https://cdn.tiny.cloud/1/g83w8n82we9iwazh48aifgcsvhacs4cq9060mnvn6ks6dqhn/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         tinymce.init({
             selector: '#description',
             menubar: false,
-            plugins: 'link lists code',
+            plugins: [
+                'lists', 'link', 'code', 'autolink', 'wordcount'
+            ],
             toolbar: 'undo redo | bold italic underline | bullist numlist | link | code',
             height: 300
         });
