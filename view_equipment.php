@@ -24,8 +24,8 @@ if (!$equipment) {
     exit();
 }
 
-// Fetch comments for the equipment (current schema has: comment_id, equipment_id, comment_text, user_name, created_at)
-$stmt = $db_public->prepare("SELECT comment_id, comment_text, user_name, created_at FROM comments WHERE equipment_id = :equipment_id ORDER BY created_at DESC");
+// Fetch comments for the equipment (current schema has: comment_id, equipment_id, comment_text, created_at, user_name)
+$stmt = $db_public->prepare("SELECT comment_id, comment_text, created_at, user_name FROM comments WHERE equipment_id = :equipment_id ORDER BY created_at DESC");
 $stmt->execute([':equipment_id' => $equipment_id]);
 $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -41,7 +41,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $comment_text = filter_var($comment_text, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         $commenter_name = trim($_POST['commenter_name'] ?? '');
         $commenter_name = filter_var($commenter_name, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-        if ($comment_text !== '' && $commenter_name !== '') {
+        if ($commenter_name === '') {
+            $commenter_name = 'Guest';
+        }
+
+        if ($comment_text !== '') {
             // Try to include the admin/write connection only when a write is required.
             $connectPath = __DIR__ . '/includes/connect.php';
             if (file_exists($connectPath)) {
@@ -61,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header("Location: view_equipment.php?id=$equipment_id");
             exit();
         } else {
-            $error = "Please provide both your name and a comment.";
+            $error = "Please enter a comment.";
         }
     }
 }
@@ -88,7 +92,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <ul class="list-unstyled">
             <?php foreach ($comments as $comment): ?>
                 <li class="mb-3">
-                    <div><strong><?= htmlspecialchars($comment['user_name'] ?: 'Anonymous') ?>:</strong> <?= nl2br(htmlspecialchars($comment['comment_text'])) ?></div>
+                    <?php $displayName = trim($comment['user_name'] ?? ''); ?>
+                    <div><strong><?= htmlspecialchars($displayName !== '' ? $displayName : 'Guest') ?>:</strong> <?= nl2br(htmlspecialchars($comment['comment_text'])) ?></div>
                     <small class="text-muted">Posted on <?= htmlspecialchars(date('Y-m-d H:i', strtotime($comment['created_at']))) ?></small>
                 </li>
             <?php endforeach; ?>
@@ -104,8 +109,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
     <form method="POST">
         <div class="mb-3">
-            <label for="commenter_name" class="form-label">Your name</label>
-            <input type="text" name="commenter_name" id="commenter_name" class="form-control" maxlength="100" required>
+            <label for="commenter_name" class="form-label">Your name <span class="text-muted small">(optional)</span></label>
+            <input type="text" name="commenter_name" id="commenter_name" class="form-control" placeholder="e.g., Alex" maxlength="80">
         </div>
         <div class="mb-3">
             <label for="comment_text" class="form-label">Your comment</label>

@@ -80,7 +80,7 @@ $recentCommentsByEq = [];
 if ($equipment) {
     $ids = array_column($equipment, 'equipment_id');
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
-    $sql = "SELECT equipment_id, comment_id, comment_text, created_at
+    $sql = "SELECT equipment_id, comment_id, comment_text, created_at, user_name
             FROM comments
             WHERE equipment_id IN ($placeholders)
             ORDER BY equipment_id ASC, created_at DESC";
@@ -159,8 +159,10 @@ function buildQueryString(array $overrides = []): string
                                         <?php if ($preview): ?>
                                             <ul class="list-unstyled small mb-0">
                                                 <?php foreach ($preview as $c): ?>
+                                                    <?php $previewName = trim($c['user_name'] ?? ''); ?>
                                                     <li class="border-start ps-2 mb-1">
                                                         <span class="text-muted me-1">[<?= htmlspecialchars(date('Y-m-d', strtotime($c['created_at']))) ?>]</span>
+                                                        <strong><?= htmlspecialchars($previewName !== '' ? $previewName : 'Guest') ?>:</strong>
                                                         <?= nl2br(htmlspecialchars(mb_strimwidth($c['comment_text'], 0, 80, '…'))) ?>
                                                     </li>
                                                 <?php endforeach; ?>

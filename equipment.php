@@ -40,8 +40,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['equipment_id'])) {
     $comment_text = filter_input(INPUT_POST, 'comment_text', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
     if (!empty($comment_text)) {
-        $stmt = $db->prepare("INSERT INTO comments (equipment_id, comment_text) VALUES (:equipment_id, :comment_text)");
-        $stmt->execute([':equipment_id' => $equipment_id, ':comment_text' => $comment_text]);
+        $stmt = $db->prepare("INSERT INTO comments (equipment_id, comment_text, user_name) VALUES (:equipment_id, :comment_text, :user_name)");
+        $stmt->execute([
+            ':equipment_id' => $equipment_id,
+            ':comment_text' => $comment_text,
+            ':user_name' => 'Admin'
+        ]);
         header("Location: equipment.php");
         exit();
     }
