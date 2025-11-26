@@ -17,8 +17,8 @@ endif;
 try {
     $db->beginTransaction();
     
-    // Delete category associations first
-    $stmt = $db->prepare("UPDATE pages SET category_id = NULL WHERE category_id = ?");
+    // Remove the category reference from equipment items before deleting it
+    $stmt = $db->prepare("UPDATE equipment SET category_id = NULL WHERE category_id = ?");
     $stmt->execute([$category_id]);
 
     // Delete the category

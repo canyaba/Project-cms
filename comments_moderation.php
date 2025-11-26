@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment_id'], $_POST[
 $filterEquipment = isset($_GET['equipment_id']) ? (int)$_GET['equipment_id'] : 0;
 $searchTerm = trim($_GET['q'] ?? '');
 
-$query = "SELECT c.comment_id, c.equipment_id, c.comment_text, c.created_at,
+$query = "SELECT c.comment_id, c.equipment_id, c.comment_text, c.created_at, c.user_name,
                  e.name AS equipment_name
           FROM comments c
           INNER JOIN equipment e ON e.equipment_id = c.equipment_id";
@@ -44,7 +44,7 @@ if ($filterEquipment) {
     $params[':equipment_id'] = $filterEquipment;
 }
 if ($searchTerm !== '') {
-    $conditions[] = '(c.comment_text LIKE :term OR e.name LIKE :term)';
+    $conditions[] = '(c.comment_text LIKE :term OR e.name LIKE :term OR c.user_name LIKE :term)';
     $params[':term'] = '%' . $searchTerm . '%';
 }
 
@@ -94,7 +94,8 @@ $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <h5 class="mb-1"><?= htmlspecialchars($comment['equipment_name']) ?></h5>
                         <small><?= htmlspecialchars(date('Y-m-d H:i', strtotime($comment['created_at']))) ?></small>
                     </div>
-                    <p class="mb-1"><strong>Anonymous:</strong> <?= nl2br(htmlspecialchars($comment['comment_text'])) ?></p>
+                    <?php $displayName = trim($comment['user_name'] ?? ''); ?>
+                    <p class="mb-1"><strong><?= htmlspecialchars($displayName !== '' ? $displayName : 'Guest') ?>:</strong> <?= nl2br(htmlspecialchars($comment['comment_text'])) ?></p>
                     <form method="post" class="d-flex gap-2">
                         <input type="hidden" name="comment_id" value="<?= $comment['comment_id'] ?>">
                         <button type="submit" name="moderation_action" value="delete" class="btn btn-sm btn-danger" onclick="return confirm('Delete this comment?')">Delete</button>
