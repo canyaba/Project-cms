@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id'])) :
     exit();
 endif;
 
-$category_id = $_GET['id'] ?? null;
+$category_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 if (!$category_id) :
     header("Location: categories.php");
     exit();

@@ -11,7 +11,7 @@ endif;
 
 // Handle category create/update actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    $name = trim($_POST['name'] ?? '');
+    $name = trim(filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
     if ($_POST['action'] === 'create' && $name !== '') {
         $stmt = $db->prepare("INSERT INTO categories (name) VALUES (?)");
         $stmt->execute([$name]);
@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 
     if ($_POST['action'] === 'update') {
-        $categoryId = (int)($_POST['category_id'] ?? 0);
+        $categoryId = filter_input(INPUT_POST, 'category_id', FILTER_VALIDATE_INT);
         if ($categoryId > 0 && $name !== '') {
             $stmt = $db->prepare("UPDATE categories SET name = ? WHERE category_id = ?");
             $stmt->execute([$name, $categoryId]);

@@ -9,8 +9,8 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
  
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = trim($_POST['username']);
-    $password = trim($_POST['password']);
+    $username = trim(filter_input(INPUT_POST, 'username', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+    $password = trim(filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW));
  
     if (!empty($username) && !empty($password)) {
         // Fetch user from database
@@ -22,6 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Store user info in session
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
+            $_SESSION['flash_success'] = 'Login successful. Welcome back!';
             header("Location: dashboard.php");
             exit();
         } else {
@@ -42,7 +43,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body>
     <h2>Login</h2>
     <?php if (isset($error)): ?>
-        <p style="color:red;"><?= $error ?></p>
+        <p style="color:red;">
+            <?= htmlspecialchars($error) ?>
+        </p>
     <?php endif; ?>
     <form method="post">
         <label>Username:</label>

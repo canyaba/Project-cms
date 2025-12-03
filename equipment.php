@@ -36,10 +36,10 @@ $equipment = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // (Optional) Handle comment submission — preserve existing behavior if used elsewhere
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['equipment_id'])) {
-    $equipment_id = $_POST['equipment_id'];
+    $equipment_id = filter_input(INPUT_POST, 'equipment_id', FILTER_VALIDATE_INT);
     $comment_text = filter_input(INPUT_POST, 'comment_text', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
-    if (!empty($comment_text)) {
+    if ($equipment_id && !empty($comment_text)) {
         $stmt = $db->prepare("INSERT INTO comments (equipment_id, comment_text, user_name) VALUES (:equipment_id, :comment_text, :user_name)");
         $stmt->execute([
             ':equipment_id' => $equipment_id,

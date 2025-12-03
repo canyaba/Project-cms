@@ -9,9 +9,10 @@ error_reporting(E_ALL);
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Sanitize and validate user input
-    $username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-    $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
-    $password = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $username = trim(filter_input(INPUT_POST, 'username', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+    $email = trim(filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL));
+    $password = trim(filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW));
+    $confirmPassword = trim(filter_input(INPUT_POST, 'confirm_password', FILTER_UNSAFE_RAW));
 
     // Validate email format
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -21,6 +22,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Validate password length
     if (strlen($password) < 5) {
         $error = "Password must be at least 5 characters long.";
+    }
+
+    if (!isset($error) && $password !== $confirmPassword) {
+        $error = "Passwords do not match.";
     }
 
     // Check if username, email, or password already exists
@@ -51,6 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $statement->bindValue(':password', $hashed_password);
 
         if ($statement->execute()) {
+            $_SESSION['flash_success'] = 'Account created successfully. Please log in.';
             header("Location: login.php");
             exit();
         } else {
@@ -79,6 +85,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <br>
         <label for="password">Password:</label>
         <input type="password" id="password" name="password" required>
+        <br>
+        <label for="confirm_password">Confirm Password:</label>
+        <input type="password" id="confirm_password" name="confirm_password" required>
         <br>
         <button type="submit">Register</button>
     </form>

@@ -47,7 +47,7 @@ if (!isset($_SESSION['user_id'])):
 endif;
 
 // Get the equipment ID from the URL
-$id = isset($_GET['id']) ? $_GET['id'] : null;
+$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
 if ($id === null): 
     header("Location: equipment.php"); // Redirect to the equipment list page

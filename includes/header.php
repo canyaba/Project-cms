@@ -73,4 +73,11 @@
   </div>
 </nav>
 
+<?php if (!empty($_SESSION['flash_success'])): ?>
+  <div class="alert alert-success text-center mb-0">
+    <?= htmlspecialchars($_SESSION['flash_success']) ?>
+  </div>
+  <?php unset($_SESSION['flash_success']); ?>
+<?php endif; ?>
+
 
