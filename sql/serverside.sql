@@ -84,6 +84,7 @@ CREATE TABLE `equipment` (
   `description` text NOT NULL,
   `price` decimal(10,6) NOT NULL,
   `comment_text` text NOT NULL,
+  `image_path` varchar(255) DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -92,19 +93,19 @@ CREATE TABLE `equipment` (
 -- Dumping data for table `equipment`
 --
 
-INSERT INTO `equipment` (`equipment_id`, `category_id`, `name`, `description`, `price`, `comment_text`, `created_at`, `updated_at`) VALUES
-(1, 1, 'Treadmill', 'Commercial-grade with 15% incline, 12mph max speed, heart rate monitor, and 10\" touchscreen', 1900.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
-(2, 1, 'Rowing Machine', 'Magnetic resistance with 10 levels, LCD monitor, foldable design for storage', 500.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
-(3, 1, 'Exercise Bikes', 'Upright stationary bike, 24 resistance levels, pulse sensors, backlit display', 380.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
-(4, 4, 'Power Rack', 'Heavy-duty steel frame, multi-grip pull-up bar, safety spotters, weight storage pegs', 70.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
-(5, 2, 'Leg Press Machine', '45-degree sled design, 1000lb capacity, oversized backrest and foot platform', 1299.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
-(6, 3, 'Olympic Barbell', '7ft Olympic bar, 1500lb weight capacity, chrome finish with knurled grip', 250.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
-(7, 3, 'Weight Plates set', 'Rubber-coated Olympic plates, 255lb total (2x45lb, 2x35lb, 2x25lb, 2x10lb, 4x5lb, 2x2.5lb)', 430.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
-(8, 4, 'Flat Bench', 'Heavy-duty steel frame, 600lb weight capacity, high-density foam padding', 130.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
-(9, 5, 'Plyo Box', '3-in-1 wooden box (20\", 24\", 30\" heights), non-slip surface, 400lb capacity', 150.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
-(10, 5, 'Resistance Bands', 'Set of 5 bands with different resistance levels, door anchor, handles, ankle straps', 30.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
-(11, 5, 'Battle Ropes', '1.5\" diameter, 40ft length, polyester blend with heat-shrink handles', 90.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
-(12, 5, 'TRX Suspension Trainer', 'Professional-grade straps, multiple anchor options, workout guide included', 190.000000, '', '2025-11-13 04:21:02', '2025-11-13 04:21:02');
+INSERT INTO `equipment` (`equipment_id`, `category_id`, `name`, `description`, `price`, `comment_text`, `image_path`, `created_at`, `updated_at`) VALUES
+(1, 1, 'Treadmill', 'Commercial-grade with 15% incline, 12mph max speed, heart rate monitor, and 10" touchscreen', 1900.000000, '', NULL, '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(2, 1, 'Rowing Machine', 'Magnetic resistance with 10 levels, LCD monitor, foldable design for storage', 500.000000, '', NULL, '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(3, 1, 'Exercise Bikes', 'Upright stationary bike, 24 resistance levels, pulse sensors, backlit display', 380.000000, '', NULL, '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(4, 4, 'Power Rack', 'Heavy-duty steel frame, multi-grip pull-up bar, safety spotters, weight storage pegs', 70.000000, '', NULL, '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(5, 2, 'Leg Press Machine', '45-degree sled design, 1000lb capacity, oversized backrest and foot platform', 1299.000000, '', NULL, '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(6, 3, 'Olympic Barbell', '7ft Olympic bar, 1500lb weight capacity, chrome finish with knurled grip', 250.000000, '', NULL, '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(7, 3, 'Weight Plates set', 'Rubber-coated Olympic plates, 255lb total (2x45lb, 2x35lb, 2x25lb, 2x10lb, 4x5lb, 2x2.5lb)', 430.000000, '', NULL, '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(8, 4, 'Flat Bench', 'Heavy-duty steel frame, 600lb weight capacity, high-density foam padding', 130.000000, '', NULL, '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(9, 5, 'Plyo Box', '3-in-1 wooden box (20", 24", 30" heights), non-slip surface, 400lb capacity', 150.000000, '', NULL, '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(10, 5, 'Resistance Bands', 'Set of 5 bands with different resistance levels, door anchor, handles, ankle straps', 30.000000, '', NULL, '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(11, 5, 'Battle Ropes', '1.5" diameter, 40ft length, polyester blend with heat-shrink handles', 90.000000, '', NULL, '2025-11-13 04:21:02', '2025-11-13 04:21:02'),
+(12, 5, 'TRX Suspension Trainer', 'Professional-grade straps, multiple anchor options, workout guide included', 190.000000, '', NULL, '2025-11-13 04:21:02', '2025-11-13 04:21:02');
 
 -- --------------------------------------------------------
 

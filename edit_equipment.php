@@ -3,6 +3,7 @@ session_start();
 
 include("includes/header.php");
 require_once __DIR__ . '/includes/connect.php';
+require_once __DIR__ . '/includes/image_upload.php';
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -39,6 +40,7 @@ function ensureEquipmentDescriptionCapacity(PDO $db): void
 }
 
 ensureEquipmentDescriptionCapacity($db);
+ensureEquipmentImageColumn($db);
 
 // Check if the user is logged in
 if (!isset($_SESSION['user_id'])): 
@@ -51,6 +53,16 @@ $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
 if ($id === null): 
     header("Location: equipment.php"); // Redirect to the equipment list page
+    exit();
+endif;
+
+// Fetch the equipment data early for reuse
+$stmt = $db->prepare("SELECT * FROM equipment WHERE equipment_id = :id");
+$stmt->execute([':id' => $id]);
+$equipment = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$equipment): 
+    header("Location: equipment.php"); // Redirect if the equipment does not exist
     exit();
 endif;
 
@@ -73,38 +85,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'):
         if ($name === '' || trim(strip_tags($description)) === '' || $price === false || $price <= 0): 
             $error = "Please fill in all fields correctly.";
         else:
-            try {
-                $db->beginTransaction();
+            $existingImage = $equipment['image_path'] ?? null;
+            $removeImage = isset($_POST['remove_image']);
+            $newImagePath = null;
 
-                $stmt = $db->prepare("UPDATE equipment SET name = :name, description = :description, price = :price, category_id = :category_id WHERE equipment_id = :id");
-                $stmt->execute([
-                    ':name' => $name,
-                    ':description' => $description,
-                    ':price' => $price,
-                    ':category_id' => $category_id,
-                    ':id' => $id
-                ]);
+            if (isset($_FILES['image']) && ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE && $_FILES['image']['name'] !== '') {
+                try {
+                    $newImagePath = processEquipmentImageUpload($_FILES['image']);
+                } catch (RuntimeException $uploadException) {
+                    $error = $uploadException->getMessage();
+                }
+            }
 
-                $db->commit();
-                header("Location: equipment.php?updated=1"); // Redirect to the equipment list page
-                exit();
-            } catch (Exception $e) {
-                if ($db->inTransaction()) $db->rollBack();
-                $error = "Error updating equipment: " . $e->getMessage();
+            if (!isset($error)) {
+                $finalImagePath = $newImagePath ?? ($removeImage ? null : $existingImage);
+
+                try {
+                    $db->beginTransaction();
+                    $stmt = $db->prepare("UPDATE equipment SET name = :name, description = :description, price = :price, category_id = :category_id, image_path = :image_path WHERE equipment_id = :id");
+                    $stmt->execute([
+                        ':name' => $name,
+                        ':description' => $description,
+                        ':price' => $price,
+                        ':category_id' => $category_id,
+                        ':image_path' => $finalImagePath,
+                        ':id' => $id
+                    ]);
+                    $db->commit();
+
+                    if ($newImagePath && $existingImage && $existingImage !== $newImagePath) {
+                        deleteEquipmentImage($existingImage);
+                    } elseif ($removeImage && $existingImage && !$newImagePath) {
+                        deleteEquipmentImage($existingImage);
+                    }
+
+                    header("Location: equipment.php?updated=1");
+                    exit();
+                } catch (Exception $e) {
+                    if ($db->inTransaction()) {
+                        $db->rollBack();
+                    }
+                    if ($newImagePath) {
+                        deleteEquipmentImage($newImagePath);
+                    }
+                    $error = "Error updating equipment: " . $e->getMessage();
+                }
+            } elseif ($newImagePath) {
+                // Validation errors after upload => remove unused file
+                deleteEquipmentImage($newImagePath);
             }
         endif;
     endif;
 endif;
 
-// Fetch the equipment data
-$stmt = $db->prepare("SELECT * FROM equipment WHERE equipment_id = :id");
-$stmt->execute([':id' => $id]);
-$equipment = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$equipment): 
-    header("Location: equipment.php"); // Redirect if the equipment does not exist
-    exit();
-endif;
 // Fetch all categories and current assignments
 $stmt = $db->query("SELECT * FROM categories ORDER BY name");
 $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -130,7 +163,7 @@ $equipment_category_id = $equipment['category_id'] ?? null;
     <?php if (isset($error)): ?>
             <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
-        <form method="POST" class="card p-3">
+        <form method="POST" class="card p-3" enctype="multipart/form-data">
             <div class="mb-3">
                 <label for="name" class="form-label">Name</label>
                 <input type="text" id="name" name="name" value="<?= htmlspecialchars($equipment['name']) ?>" class="form-control" required>
@@ -154,6 +187,23 @@ $equipment_category_id = $equipment['category_id'] ?? null;
                     </select>
                 </div>
             </div>
+            <div class="mb-3 mt-3">
+                <label for="image" class="form-label">Equipment image <span class="text-muted small">(optional)</span></label>
+                <input type="file" id="image" name="image" class="form-control" accept="image/*">
+                <div class="form-text">New uploads replace the existing image and are resized automatically.</div>
+            </div>
+            <?php if (!empty($equipment['image_path'])): ?>
+                <div class="mb-3">
+                    <label class="form-label">Current image</label>
+                    <div>
+                        <img src="<?= htmlspecialchars($equipment['image_path']) ?>" alt="Current image" class="img-fluid rounded border" style="max-width: 320px;">
+                    </div>
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" value="1" id="remove_image" name="remove_image">
+                        <label class="form-check-label" for="remove_image">Remove this image</label>
+                    </div>
+                </div>
+            <?php endif; ?>
             <div class="mt-4 d-flex gap-2">
                 <button type="submit" class="btn btn-primary">Update Equipment</button>
                 <button type="submit" name="delete" value="1" class="btn btn-danger" onclick="return confirm('Delete this equipment?')">Delete Equipment</button>

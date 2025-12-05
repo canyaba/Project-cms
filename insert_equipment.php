@@ -2,6 +2,7 @@
 session_start();
 
 require_once __DIR__ . '/includes/connect.php';
+require_once __DIR__ . '/includes/image_upload.php';
 
 /**
  * Guarantee the equipment description column can store rich text without truncation errors.
@@ -48,6 +49,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 ensureEquipmentDescriptionCapacity($db);
+ensureEquipmentImageColumn($db);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST'):
     // Sanitize and validate user input
@@ -62,24 +64,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'):
     if ($name === '' || trim($description) === '' || $price === false || $price <= 0 || $category_id === null): 
         $error = "Please fill in all fields correctly, including selecting a category.";
     else:
-        // Insert the new equipment into the database
-        try {
-            $stmt = $db->prepare("INSERT INTO equipment (name, description, price, category_id, comment_text) VALUES (:name, :description, :price, :category_id, :comment_text)");
-            $stmt->execute([
-                ':name' => $name,
-                ':description' => $description,
-                ':price' => $price,
-                ':category_id' => $category_id,
-                ':comment_text' => ''
-            ]);
+        $imagePath = null;
+        if (isset($_FILES['image']) && ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE && $_FILES['image']['name'] !== '') {
+            try {
+                $imagePath = processEquipmentImageUpload($_FILES['image']);
+            } catch (RuntimeException $uploadException) {
+                $error = $uploadException->getMessage();
+            }
+        }
 
-            header('Location: equipment.php?created=1');
-            exit();
-        } catch (PDOException $e) {
-            if (str_contains($e->getMessage(), 'Data too long')) {
-                $error = "Description is too long for the current database column. Please shorten it or contact support.";
-            } else {
-                $error = "Error inserting equipment: " . $e->getMessage();
+        if (!isset($error)) {
+            // Insert the new equipment into the database
+            try {
+                $stmt = $db->prepare("INSERT INTO equipment (name, description, price, category_id, comment_text, image_path) VALUES (:name, :description, :price, :category_id, :comment_text, :image_path)");
+                $stmt->execute([
+                    ':name' => $name,
+                    ':description' => $description,
+                    ':price' => $price,
+                    ':category_id' => $category_id,
+                    ':comment_text' => '',
+                    ':image_path' => $imagePath
+                ]);
+
+                header('Location: equipment.php?created=1');
+                exit();
+            } catch (PDOException $e) {
+                if (str_contains($e->getMessage(), 'Data too long')) {
+                    $error = "Description is too long for the current database column. Please shorten it or contact support.";
+                } else {
+                    $error = "Error inserting equipment: " . $e->getMessage();
+                }
             }
         }
     endif;
@@ -148,7 +162,7 @@ include 'includes/header.php';
     <?php if (isset($error)): ?>
         <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
-    <form method="POST" action="" class="card p-3" id="equipment-form">
+    <form method="POST" action="" class="card p-3" id="equipment-form" enctype="multipart/form-data">
         <div class="mb-3">
             <label for="name" class="form-label">Name</label>
             <input type="text" id="name" name="name" class="form-control" value="<?= htmlspecialchars($name ?? '') ?>" required>
@@ -157,6 +171,11 @@ include 'includes/header.php';
             <label for="description" class="form-label">Description</label>
             <textarea id="description" name="description" class="form-control"><?= htmlspecialchars($description ?? '') ?></textarea>
             <div id="description-error" class="text-danger small mt-1 d-none">Description is required.</div>
+        </div>
+        <div class="mb-3">
+            <label for="image" class="form-label">Equipment image <span class="text-muted small">(optional)</span></label>
+            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+            <div class="form-text">JPEG, PNG, GIF, or WebP up to 5MB. Images are resized on upload.</div>
         </div>
         <div class="row g-3">
             <div class="col-md-6">

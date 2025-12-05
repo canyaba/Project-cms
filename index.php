@@ -142,6 +142,9 @@ function buildQueryString(array $overrides = []): string
                     <?php foreach ($equipment as $item): ?>
                         <div class="col-md-6">
                             <div class="card h-100 shadow-sm">
+                                <?php if (!empty($item['image_path'])): ?>
+                                    <img src="<?= htmlspecialchars($item['image_path']) ?>" class="card-img-top" alt="<?= htmlspecialchars($item['name']) ?> image">
+                                <?php endif; ?>
                                 <div class="card-body d-flex flex-column">
                                     <h2 class="h5"><?= htmlspecialchars($item['name']) ?></h2>
                                     <p class="text-muted mb-1"><strong>Category:</strong> <?= htmlspecialchars($item['category_name'] ?? 'Uncategorized') ?></p>

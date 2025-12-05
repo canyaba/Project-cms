@@ -80,6 +80,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <h1><?= htmlspecialchars($equipment['name']) ?></h1>
+    <?php if (!empty($equipment['image_path'])): ?>
+        <div class="mb-3">
+            <img src="<?= htmlspecialchars($equipment['image_path']) ?>" alt="<?= htmlspecialchars($equipment['name']) ?> image" class="img-fluid rounded border" style="max-width: 640px;">
+        </div>
+    <?php endif; ?>
     <div class="mb-3"><?= $equipment['description'] ?></div>
     <p>Price: $<?= htmlspecialchars($equipment['price']) ?></p>
     <?php if (!empty($equipment['category_name'])): ?>
