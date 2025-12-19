@@ -16,6 +16,7 @@
     />
     <!-- MDB -->
     <link rel="stylesheet" href="css/mdb.min.css" />
+    <link rel="stylesheet" href="css/custom-theme.css" />
 </head>
 <body>
 <nav class="navbar navbar-expand-lg bg-body-tertiary">

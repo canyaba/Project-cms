@@ -89,6 +89,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'):
                 header('Location: equipment.php?created=1');
                 exit();
             } catch (PDOException $e) {
+                if ($imagePath) {
+                    // Avoid orphaned files if the DB write fails
+                    deleteEquipmentImage($imagePath);
+                }
+
                 if (str_contains($e->getMessage(), 'Data too long')) {
                     $error = "Description is too long for the current database column. Please shorten it or contact support.";
                 } else {
