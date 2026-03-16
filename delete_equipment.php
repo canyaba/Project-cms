@@ -1,12 +1,9 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/connect.php';
 require_once __DIR__ . '/includes/image_upload.php';
 
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit();
-}
+requireAuth();
 
 $equipmentId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 

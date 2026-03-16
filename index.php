@@ -182,7 +182,7 @@ require 'includes/header.php';
             <div class="equipment-grid" aria-label="Equipment catalog results">
                 <?php foreach ($equipment as $item): ?>
                     <article class="equipment-card card shadow-sm">
-                        <a class="equipment-card__image-link" href="view_equipment.php?id=<?= $item['equipment_id'] ?>" aria-label="View <?= htmlspecialchars($item['name']) ?>">
+                        <a class="equipment-card__link" href="view_equipment.php?id=<?= $item['equipment_id'] ?>" aria-label="View <?= htmlspecialchars($item['name']) ?>">
                             <div class="equipment-card__media">
                                 <?php if (!empty($item['image_path'])): ?>
                                     <img
@@ -195,21 +195,11 @@ require 'includes/header.php';
                                     <div class="equipment-card__placeholder" aria-hidden="true">No image</div>
                                 <?php endif; ?>
                             </div>
+                            <div class="card-body equipment-card__body">
+                                <h2 class="equipment-card__title"><?= htmlspecialchars($item['name']) ?></h2>
+                                <p class="equipment-card__price">$<?= htmlspecialchars(number_format((float)$item['price'], 2)) ?></p>
+                            </div>
                         </a>
-                        <div class="card-body equipment-card__body">
-                            <div class="equipment-card__meta">
-                                <span class="badge"><?= htmlspecialchars($item['category_name'] ?? 'Uncategorized') ?></span>
-                                <span class="equipment-card__comments"><?= (int)$item['comment_count'] ?> comment<?= (int)$item['comment_count'] === 1 ? '' : 's' ?></span>
-                            </div>
-                            <h2 class="equipment-card__title">
-                                <a href="view_equipment.php?id=<?= $item['equipment_id'] ?>"><?= htmlspecialchars($item['name']) ?></a>
-                            </h2>
-                            <p class="equipment-card__price">$<?= htmlspecialchars(number_format((float)$item['price'], 2)) ?></p>
-                            <p class="equipment-card__summary"><?= htmlspecialchars(mb_strimwidth(strip_tags($item['description']), 0, 90, '...')) ?></p>
-                            <div class="equipment-card__footer">
-                                <a class="btn btn-sm equipment-card__cta" href="view_equipment.php?id=<?= $item['equipment_id'] ?>">View details</a>
-                            </div>
-                        </div>
                     </article>
                 <?php endforeach; ?>
             </div>

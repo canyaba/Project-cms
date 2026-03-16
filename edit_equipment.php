@@ -1,7 +1,5 @@
 <?php
-session_start();
-
-include("includes/header.php");
+require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/connect.php';
 require_once __DIR__ . '/includes/image_upload.php';
 
@@ -42,11 +40,7 @@ function ensureEquipmentDescriptionCapacity(PDO $db): void
 ensureEquipmentDescriptionCapacity($db);
 ensureEquipmentImageColumn($db);
 
-// Check if the user is logged in
-if (!isset($_SESSION['user_id'])): 
-    header("Location: login.php");
-    exit();
-endif;
+requireAuth();
 
 // Get the equipment ID from the URL
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -142,6 +136,8 @@ endif;
 $stmt = $db->query("SELECT * FROM categories ORDER BY name");
 $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $equipment_category_id = $equipment['category_id'] ?? null;
+
+include 'includes/header.php';
 ?>
 <script src="https://cdn.tiny.cloud/1/g83w8n82we9iwazh48aifgcsvhacs4cq9060mnvn6ks6dqhn/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
 <script>

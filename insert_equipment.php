@@ -1,6 +1,5 @@
 <?php
-session_start();
-
+require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/connect.php';
 require_once __DIR__ . '/includes/image_upload.php';
 
@@ -42,11 +41,7 @@ $name = '';
 $description = '';
 $category_id = null;
 
-// Check if the user is logged in before output
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit();
-}
+requireAuth();
 
 ensureEquipmentDescriptionCapacity($db);
 ensureEquipmentImageColumn($db);

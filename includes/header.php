@@ -1,4 +1,10 @@
-<?php $isLoggedIn = isset($_SESSION['user_id']); ?>
+<?php
+$isLoggedIn = isset($_SESSION['user_id']);
+$mdbCssPath = __DIR__ . '/../css/mdb.min.css';
+$themeCssPath = __DIR__ . '/../css/custom-theme.css';
+$mdbCssVersion = file_exists($mdbCssPath) ? filemtime($mdbCssPath) : time();
+$themeCssVersion = file_exists($themeCssPath) ? filemtime($themeCssPath) : time();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,8 +21,8 @@
       href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap"
     />
     <!-- MDB -->
-    <link rel="stylesheet" href="css/mdb.min.css" />
-    <link rel="stylesheet" href="css/custom-theme.css" />
+    <link rel="stylesheet" href="css/mdb.min.css?v=<?= htmlspecialchars((string)$mdbCssVersion) ?>" />
+    <link rel="stylesheet" href="css/custom-theme.css?v=<?= htmlspecialchars((string)$themeCssVersion) ?>" />
 </head>
 <body>
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
@@ -36,12 +42,12 @@
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link" aria-current="page" href="dashboard.php">Dashboard</a>
-        </li>
-        <li class="nav-item">
           <a class="nav-link" href="index.php#equipment">Browse Equipment</a>
         </li>
         <?php if ($isLoggedIn): ?>
+          <li class="nav-item">
+            <a class="nav-link" aria-current="page" href="dashboard.php">Dashboard</a>
+          </li>
           <li class="nav-item">
             <a class="nav-link" href="equipment.php">Manage Equipment</a>
           </li>

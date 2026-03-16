@@ -1,12 +1,8 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/connect.php';
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) :
-    header("Location: login.php");
-    exit();
-endif;
+requireAuth();
 
 $category_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 if (!$category_id) :
