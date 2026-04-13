@@ -12,7 +12,7 @@ require_once __DIR__ . '/config.php';
 $dbHost = \ConfigLoader::get('DB_HOST', '127.0.0.1');
 $dbPort = \ConfigLoader::get('DB_PORT', 3306);
 $dbName = \ConfigLoader::get('DB_NAME', 'serverside');
-$dbUser = \ConfigLoader::get('DB_USER', 'serveruser');
+$dbUser = \ConfigLoader::get('DB_USER', 'serveuser');
 $dbPass = \ConfigLoader::get('DB_PASSWORD', 'password');
 $dbCharset = \ConfigLoader::get('DB_CHARSET', 'utf8mb4');
 
