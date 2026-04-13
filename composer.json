@@ -1,0 +1,35 @@
+{
+  "name": "projectcms/equipment-management",
+  "description": "Equipment Management System - Full-stack CMS built with PHP and MySQL",
+  "type": "project",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.2"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^1.10",
+    "squizlabs/php_codesniffer": "^3.7"
+  },
+  "autoload": {
+    "files": [
+      "includes/config.php",
+      "includes/auth.php",
+      "includes/function.php",
+      "includes/connect.php"
+    ]
+  },
+  "scripts": {
+    "lint": "phpcs --standard=PSR12 .",
+    "stan": "phpstan analyse --level=5 .",
+    "test": [
+      "@lint",
+      "@stan"
+    ]
+  },
+  "authors": [
+    {
+      "name": "Project Team",
+      "email": "team@example.com"
+    }
+  ]
+}
