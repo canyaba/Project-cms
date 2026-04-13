@@ -1,0 +1,55 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Block direct access to sensitive files and directories
+    RewriteRule ^\.env$ - [F,L]
+    RewriteRule ^\.env\.* - [F,L]
+    RewriteRule ^\.git - [F,L]
+    RewriteRule ^sql/ - [F,L]
+    RewriteRule ^includes/ - [F,L]
+    RewriteRule ^logs/ - [F,L]
+    RewriteRule ^sessions/ - [F,L]
+    RewriteRule ^composer\.json$ - [F,L]
+    RewriteRule ^composer\.lock$ - [F,L]
+    RewriteRule ^README\.md$ - [F,L]
+    RewriteRule ^DEPLOYMENT\.md$ - [F,L]
+</IfModule>
+
+# Disable directory listing
+<IfModule mod_autoindex.c>
+    Options -Indexes
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+    # Cache policy
+    Header set Cache-Control "max-age=3600, must-revalidate"
+</IfModule>
+
+# PHP uploads security
+<Files ~ "\.php$">
+    SetHandler application/x-httpd-php
+</Files>
+
+# Prevent execution of scripts in upload directory
+<Directory "uploads">
+    <FilesMatch "\.php$">
+        Order Allow,Deny
+        Deny from all
+    </FilesMatch>
+    php_flag engine off
+</Directory>
+
+# Prevent file uploads from being executed
+<IfModule mod_fcgid.c>
+    <Directory /uploads>
+        SetHandler fcgid-script
+    </Directory>
+</IfModule>

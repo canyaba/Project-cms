@@ -1,0 +1,62 @@
+# Environment configuration
+.env
+.env.local
+.env.*.local
+
+# Database files
+*.sql
+!sql/serverside.sql
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.sublime-project
+.sublime-workspace
+.DS_Store
+
+# OS
+Thumbs.db
+.DS_Store
+*.log
+
+# Uploads (user-generated content)
+/uploads/*
+!uploads/.gitkeep
+
+# Sensitive data
+*.key
+*.pem
+config.local.php
+secrets.php
+
+# Temporary files
+/tmp/
+/temp/
+/cache/
+
+# Dependency managers (if added)
+/vendor/
+/node_modules/
+composer.lock
+package-lock.json
+yarn.lock
+
+# Build artifacts
+/dist/
+/build/
+
+# Debug files
+error_log
+access_log
+*.dump
+
+# Session files
+/sessions/*
+!sessions/.gitkeep
+
+# SSL certificates
+*.crt
+*.cer
